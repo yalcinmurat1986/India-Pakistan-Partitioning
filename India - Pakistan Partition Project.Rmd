@@ -1,0 +1,470 @@
+---
+INDIA - PAKISTAN PARTITION
+---
+
+```{r}
+partition = read.csv(file.choose(),header = T)
+dim(partition)
+str(partition)
+```
+
+```{r}
+head(partition,20)
+```
+
+```{r}
+educ_british = partition[,c("educ", "views_brit")]
+educ_british$educ[educ_british$educ=="."]=NA
+educ_british$educ[educ_british$educ==""]=NA
+educ_british$views_brit[educ_british$views_brit=="."]=NA
+educ_british$views_brit[educ_british$views_brit==""]=NA
+educ_british=na.omit(educ_british)
+educ_british$educ=factor(educ_british$educ)
+educ_british$views_brit=factor(educ_british$views_brit)
+a= table(educ_british)
+
+plot(a,col=2:8, main = "Education Level ~ British Favor", xlab="Education Level", ylab="Favor of British")
+chisq.test(table(educ_british))
+prop.table(a)
+library(ggplot2)
+ggplot(educ_british,aes(y = educ, x = views_brit)) +geom_bin2d()+ geom_smooth()
+
+table(partition$religion)
+#barplot(table(partition$religion),col=2:5, cex.axis = 0.8)
+
+#ggplot(data.frame(partition$religion), aes(x= partition$religion)) + geom_histogram(stat="count", fill=c(2:4),bindwith=25)
+
+ggplot(data.frame(partition$religion), aes(x= religion)) + geom_bar(stat="count", fill=c(2:4), colour= I(5:7), bindwith=25 )
+```
+
+Chisq test does not indicate strong correlation between education level and British favor
+However, If we look at the proportions of population we can say when the education levels gets higher, favor of British gets lower
+```{r}
+require(plotrix)
+table(partition$religion)
+lbls = paste(names(table(partition$religion)), "\n",table(partition$religion))
+pie3D(table(partition$religion),labels = lbls, radius = 2.50, explode = 0.15, main= "Religion", col = 2:8)
+
+```
+
+We should consider the total population and percentage when we make comparision
+
+```{r}
+educ_mig = partition[,c("educ", "mig_yn")]
+educ_mig$educ[educ_mig$educ=="."]=NA
+educ_mig$educ[educ_mig$educ==""]=NA
+educ_mig$educ[educ_mig$educ==","]=NA
+educ_mig= na.omit(educ_mig)
+educ_mig$educ=factor(educ_mig$educ)
+table(educ_mig)
+prop.table(table(educ_mig))
+plot(table(educ_mig), col=2:5)
+chisq.test(table(educ_mig))
+require(lsr)
+cramersV(table(educ_mig))
+```
+
+Pearson's Chisq test indicates that there is a slight relation between education level and migration
+CramersV value also supports that there is a slight correlation between education level and migration
+
+
+```{r}
+plot(partition$religion[partition$indtopak=="1"], col=2:4, main= "Migrated from India to Pakistan ~ Religion")
+plot(partition$religion[partition$indtopak=="0"], col=2:4, main= "Stayed in India ~ Religion")
+plot(partition$religion[partition$paktoind=="1"], col=2:4 , main= "Migrated from Pakistan to India ~ Religion")
+plot(partition$religion[partition$paktoind=="0"], col=2:4 , main= "Stayed in Pakistan ~  Religion")
+```
+
+
+```{r}
+violence_religion = partition[,c("exp_viol", "religion")]
+levels(violence_religion$exp_viol)
+violence_religion$exp_viol[violence_religion$exp_viol=='.']=NA
+violence_religion$exp_viol[violence_religion$exp_viol=='']=NA
+levels(violence_religion$religion)
+violence_religion= na.omit(violence_religion)
+violence_religion$exp_viol=factor(violence_religion$exp_viol)
+levels(violence_religion$exp_viol) = c("Not.Exp.Violence", "Exp.Violence" )
+```
+
+
+
+```{r}
+
+round(addmargins(prop.table(table(violence_religion$religion,violence_religion$exp_viol))),2)
+
+violence_religion = partition[,c("exp_viol", "religion")]
+violence_religion
+violence_religion$exp_viol[violence_religion$exp_viol=='.']=NA
+violence_religion$exp_viol[violence_religion$exp_viol=='']=NA
+violence_religion=na.omit(violence_religion)
+violence_religion$exp_viol=factor(violence_religion$exp_viol)
+violence_religion$religion=factor(violence_religion$religion)
+
+which(is.na(violence_religion))
+require(plotrix)
+violence_religion$exp_viol=factor(violence_religion$exp_viol)
+levels(violence_religion$exp_viol)=c('Not Exp. Violence', 'Exp. Violence')
+
+hindu=violence_religion[violence_religion$religion=="Hindu",]
+hindu$religion=factor(hindu$religion)
+table(hindu)
+lbls = paste(names(round(prop.table(table(hindu$exp_viol)),3)) , "\n", round(prop.table(table(hindu$exp_viol)),3))
+
+addmargins(table(violence_religion))
+pie3D(prop.table(table(hindu)),labels = lbls, radius = 2.00, explode = 0.15, main= "Hindu 295 People", col = c(3,2))
+
+muslim=violence_religion[violence_religion$religion=="Muslim",]
+muslim$religion=factor(muslim$religion)
+lbls = paste(names(round(prop.table(table(muslim$exp_viol)),3)) , "\n", round(prop.table(table(muslim$exp_viol)),3))
+
+pie3D(prop.table(table(muslim)),labels = lbls, radius = 2.00, explode = 0.15, main= "Muslim 69 People", col = c(3,2))
+
+sikh=violence_religion[violence_religion$religion=="Sikh",]
+sikh$religion=factor(sikh$religion)
+lbls = paste(names(round(prop.table(table(sikh$exp_viol)),3)) , "\n", round(prop.table(table(sikh$exp_viol)),3))
+
+pie3D(prop.table(table(sikh)),labels = lbls, radius = 2.00, explode = 0.15, main= "Sikh 48 People", col = c(3,2))
+
+addmargins(table(violence_religion))
+```
+
+
+
+```{r}
+b = table(violence_religion$religion,violence_religion$exp_viol)
+b
+chisq.test(b)
+require(lsr)
+cramersV(b)
+plot(b, col = c(3,2), main= "Experienced Violence by Religion")
+```
+
+According to chisq test, we don't have enough evidence to reject NULL Hypothsis. It means there is no significant relation between violence and religion 
+
+CramersV value indicates the association between violence and religion. Value 0.054 shows that relation between two variables are very week.
+
+```{r}
+violence_gender = partition[,c("exp_viol", "gender")]
+violence_gender$gender[violence_gender$gender=="."] = NA
+violence_gender$gender[violence_gender$gender==""] = NA
+violence_gender$gender = factor(violence_gender$gender)
+violence_gender$exp_viol[violence_gender$exp_viol =="."] = NA
+violence_gender$exp_viol[violence_gender$exp_viol ==""] = NA
+violence_gender = na.omit(violence_gender)
+violence_gender$exp_viol = factor(violence_gender$exp_viol)
+levels(violence_gender$exp_viol) = c("Not.Exp.Violence", "Exp.Violence")
+round(addmargins(prop.table(table(violence_gender$gender, violence_gender$exp_viol))),2)
+```
+
+```{r}
+violence_gender$gender[violence_gender$gender == "male"]= "Male"
+levels(violence_gender$gender)
+table(violence_gender$gender)
+
+violence_gender$gender=factor(violence_gender$gender)
+a =  table(violence_gender$gender, violence_gender$exp_viol)
+a
+chisq.test(a)
+cramersV(a)
+plot(a,col = c(3,2), main= "Experienced Violence by Gender")
+```
+
+According to chisq test, we don't have enough evidence to reject NULL Hypothsis. It means there is no significant relation between violence and gender 
+
+CramersV value indicates the association between violence and gender. Value 6.096857e-17 shows that relation between two variables are very week.
+
+```{r}
+plot(partition$religion[partition$exp_viol =="1"], col=2:4, main= "Experienced Violence by Religion")
+plot(partition$gender[partition$exp_viol =="1"], col=2:3, main= "Experienced Violence by Gender")
+```
+
+We need to look at the percentages to get right intiution
+
+```{r}
+head(partition)
+```
+
+```{r}
+plot(partition$int_location[partition$exp_viol =="1"], col=2:6, main= "Experienced Violence by Interview Location")
+plot(partition$int_location[partition$exp_viol =="0"], col=2:6, main= "Not Experienced Violence by Interview Location")
+```
+
+```{r}
+age_mig = partition[,c("age_part", "mig_yn")]
+age_mig$age_part[age_mig$age_part=='.']=NA
+age_mig$age_part[age_mig$age_part=='']=NA
+age_mig=na.omit(age_mig)
+age_mig$age_part=factor(age_mig$age_part)
+age_mig$age_part=as.numeric(age_mig$age_part)
+levels(age_mig)
+str(age_mig)
+summary(age_mig$age_part)
+c1<-cut(age_mig$age_part, br=c(min(age_mig$age_part)-1,
+                           6,10,17,31,max(age_mig$age_part)+1))
+#ggplot(data.frame(age_mig), aes(x= age_mig$age_part, y=age_mig$mig_yn)) + geom_boxplot()
+age_mig$mig_yn=factor(age_mig$mig_yn)
+levels(age_mig$mig_yn)=c('Not Migrated', 'Migrated')
+
+boxplot(age_mig$age_part ~ age_mig$mig_yn, col = 2:3, xlab="Migration", ylab="Age", main="Migration Status According to Age")
+class(age_mig$mig_yn)
+```
+
+Only young population (age<35) migrated.
+
+```{r}
+age_violation = partition[,c("age_part", "exp_viol")]
+age_violation$age_part[age_violation$age_part=='.']=NA
+age_violation$age_part[age_violation$age_part=='']=NA
+age_violation$age_part=factor(age_violation$age_part)
+
+age_violation$exp_viol[age_violation$exp_viol=='.']=NA
+age_violation$exp_viol[age_violation$exp_viol=='']=NA
+age_violation=na.omit(age_violation)
+age_violation$exp_viol=factor(age_violation$exp_viol)
+
+age_violation$age_part=as.numeric(age_violation$age_part)
+
+
+#ggplot(data.frame(age_mig), aes(x= age_mig$age_part, y=age_mig$mig_yn)) + geom_boxplot()
+
+levels(age_violation$exp_viol )=c('Not Exp. Violence', 'Exp. Violence')
+
+boxplot(age_violation$age_part ~ age_violation$exp_viol , col = 2:3, xlab="Migration", ylab="Age", main="Migration Status According to Age")
+class(age_mig$mig_yn)
+```
+
+From this boxplot, we see that there is no age effect on experiencing violence
+
+```{r}
+violation_region = partition[,c("exp_viol", "indtopak")]
+violation_region
+violation_region$exp_viol[violation_region$exp_viol=='.']=NA
+violation_region$exp_viol[violation_region$exp_viol=='']=NA
+violation_region=na.omit(violation_region)
+violation_region$exp_viol=factor(violation_region$exp_viol)
+which(is.na(violation_region))
+require(plotrix)
+violation_region$exp_viol=factor(violation_region$exp_viol)
+levels(violation_region$exp_viol)=c('Not Exp. Violence', 'Exp. Violence')
+table(violation_region[violation_region$indtopak=="1",])
+
+intopak=violation_region[violation_region$indtopak=="1",]
+
+lbls = paste(names(round(prop.table(table(intopak$exp_viol)),3)) , "\n", round(prop.table(table(intopak$exp_viol)),3))
+
+prop.table(table(violation_region[violation_region$indtopak=="1",]))
+
+pie3D(prop.table(table(violation_region[violation_region$indtopak=="1",])),labels = lbls, radius = 2.00, explode = 0.15, main= "Migrated from India to Pakistan 62 People", col = c(3,2))
+
+length(violation_region$indtopak[violation_region$indtopak=="1"])
+length(violation_region$indtopak[violation_region$indtopak=="0"])
+
+intopak=violation_region[violation_region$indtopak=="0",]
+
+lbls = paste(names(round(prop.table(table(intopak$exp_viol)),3)) , "\n", round(prop.table(table(intopak$exp_viol)),3))
+
+prop.table(table(violation_region[violation_region$indtopak=="0",]))
+
+pie3D(prop.table(table(violation_region[violation_region$indtopak=="0",])),labels = lbls, radius = 2.00, explode = 0.15, main= "Not Migrated from India to Pakistan 350 People", col = c(3,2))
+```
+
+
+
+```{r}
+violation_region = partition[,c("exp_viol", "paktoind")]
+violation_region
+violation_region$exp_viol[violation_region$exp_viol=='.']=NA
+violation_region$exp_viol[violation_region$exp_viol=='']=NA
+violation_region=na.omit(violation_region)
+violation_region$exp_viol=factor(violation_region$exp_viol)
+
+require(plotrix)
+violation_region$exp_viol=factor(violation_region$exp_viol)
+levels(violation_region$exp_viol)=c('Not Exp. Violence', 'Exp. Violence')
+table(violation_region)
+
+paktoind=violation_region[violation_region$paktoind=="1",]
+
+lbls = paste(names(round(prop.table(table(intopak$exp_viol)),3)) , "\n", round(prop.table(table(intopak$exp_viol)),3))
+
+prop.table(table(violation_region[violation_region$paktoind=="1",]))
+
+pie3D(prop.table(table(violation_region[violation_region$paktoind=="1",])),labels = lbls, radius = 2.00, explode = 0.15, main= "Migrated from Pakistan to India 328 People", col = c(3,2))
+
+length(violation_region$paktoind[violation_region$paktoind=="1"])
+length(violation_region$paktoind[violation_region$paktoind=="0"])
+intopak=violation_region[violation_region$paktoind=="0",]
+
+lbls = paste(names(round(prop.table(table(intopak$exp_viol)),3)) , "\n", round(prop.table(table(intopak$exp_viol)),3))
+
+prop.table(table(violation_region[violation_region$paktoind=="0",]))
+
+pie3D(prop.table(table(violation_region[violation_region$paktoind=="0",])),labels = lbls, radius = 2.00, explode = 0.15, main= "Not Migrated from Pakistan to India 84 People", col = c(3,2))
+
+```
+
+```{r}
+
+viol = partition[,c("exp_viol", "religion", "paktoind","indtopak", "mig_yn")]
+
+viol$exp_viol[viol$exp_viol=="."]=NA
+viol$exp_viol[viol$exp_viol==""]=NA
+#viol$religion=factor(viol$religion)
+viol=na.omit(viol)
+#viol=data.frame(viol)
+which(is.na(viol))
+viol.glm = glm(exp_viol~. , data = viol,family = 'binomial')
+summary(viol.glm)
+```
+
+Acoording to summary of logistic model, we can not have a good model with the variable in hand. Predictors are not strongly correlated with response variable. Having week correlation makes our model's prediction capability also week.
+
+```{r}
+require(tm)
+s=("a.,/ b")
+s = removePunctuation(s)
+c = strsplit(s,split=c(" "))[[1]][1]
+c
+```
+
+```{r}
+hometown1= vector("list")
+for (i in partition$hometown){
+  a = strsplit(removePunctuation(i),split=c(" "))[[1]][1]
+  hometown1 = c(hometown1, a)
+}
+
+hometown1=na.omit(hometown1)
+require(ggmap)
+
+hometown1=as.character(hometown1)
+hometown1=na.omit(hometown1) 
+hometown1 = geocode(hometown1)
+hometown1=na.omit(hometown1)  
+
+ht = hometown1
+long = which(ht[[1]] > 65)
+long1=as.matrix(ht[long,][1])
+long1
+l=as.numeric(long1)
+lat= as.matrix(ht[long,][2])
+lat
+la=as.numeric(lat)
+
+```
+
+```{r}
+library(leaflet)
+
+m <- leaflet() %>%
+  addTiles() %>%  # Add default OpenStreetMap map tiles
+  addMarkers( lng=l, lat=la,
+    popup="The birthplace of R")
+m  # Print the map
+```
+
+```{r}
+require(tm)
+loc_viol= vector("list")
+for (i in partition$loc_viol){
+  a = strsplit(removePunctuation(i),split=c(" "))[[1]][1]
+  loc_viol = c(loc_viol, a)
+}
+
+loc_viol=na.omit(loc_viol)
+require(ggmap)
+
+loc_viol=as.character(loc_viol)
+loc_viol=na.omit(loc_viol)  
+loc_viol = geocode(loc_viol)
+loc_viol=na.omit(loc_viol)  
+loc_viol[[1]]
+loc_viol[[2]]
+head(loc_viol)
+```
+
+```{r}
+library(leaflet)
+
+loc_viol=loc_viol1
+long = which(loc_viol[[1]] > 65)
+long1=as.matrix(loc_viol[long,][1])
+long1
+l=as.numeric(long1)
+lat= as.matrix(loc_viol[long,][2])
+lat
+la=as.numeric(lat)
+
+```
+
+
+```{r}
+m <- leaflet() %>%
+  addTiles() %>%  # Add default OpenStreetMap map tiles
+  addMarkers( lng=l, lat=la,
+    popup="The birthplace of R")
+m  # Print the map
+```
+
+```{r}
+require(tm)
+loc_viol= vector("list")
+viol_Muslim = partition$loc_viol[partition$religion=="Muslim"]
+for (i in viol_Muslim ){
+  a = strsplit(removePunctuation(i),split=c(" "))[[1]][1]
+  loc_viol = c(loc_viol, a)
+}
+
+loc_viol=na.omit(loc_viol)
+require(ggmap)
+
+loc_viol=as.character(loc_viol)
+loc_viol=na.omit(loc_viol)  
+loc_viol = geocode(loc_viol)
+loc_viol=na.omit(loc_viol)  
+
+long = which(loc_viol[[1]] > 65)
+long1=as.matrix(loc_viol[long,][1])
+long1
+l=as.numeric(long1)
+lat= as.matrix(loc_viol[long,][2])
+lat
+la=as.numeric(lat)
+```
+
+```{r}
+m <- leaflet() %>%
+  addTiles() %>%  # Add default OpenStreetMap map tiles
+  addMarkers( lng=l, lat=la,
+    popup="The birthplace of R")
+m  # Print the map
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r}
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
